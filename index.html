@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f4c81">
+  <link rel="manifest" href="manifest.json">
+  <title>Terminal Maintenance I&C</title>
+  <style>
+    :root {
+      --primary: #0f4c81;
+      --accent: #008080;
+      --bg-grid: #f4f7fa;
+      --glass: rgba(255, 255, 255, 0.88);
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body {
+      background-color: var(--bg-grid);
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    /* Header Navbar */
+    .navbar {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(15, 76, 129, 0.1);
+    }
+    .brand { font-weight: 800; font-size: 16px; color: var(--primary); letter-spacing: 0.5px; }
+    .btn-refresh {
+      background: #e2e8f0; border: none; padding: 8px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; color: var(--primary); cursor: pointer;
+    }
+
+    /* Container Utama */
+    .container { max-width: 680px; margin: 0 auto; padding: 16px; }
+
+    /* Hero Banner */
+    .hero-card {
+      background: var(--glass); border-radius: 16px; padding: 22px 18px;
+      text-align: center; border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 8px 24px rgba(15, 76, 129, 0.06);
+      margin-bottom: 16px;
+    }
+    .hero-card h1 { font-size: 20px; color: var(--primary); margin-bottom: 8px; }
+    .hero-divider { border-top: 2px dashed #93c5fd; width: 60%; margin: 10px auto; }
+    .hero-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Search & Filter */
+    .search-box {
+      width: 100%; padding: 14px 16px; border-radius: 12px;
+      border: 1px solid #cbd5e1; background: #fff;
+      font-size: 14px; margin-bottom: 12px; outline: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .search-box:focus { border-color: var(--primary); }
+
+    .filter-pills {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px;
+    }
+    .filter-pills::-webkit-scrollbar { display: none; }
+    .pill {
+      padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      background: #fff; color: var(--text-muted); border: 1px solid #cbd5e1;
+      white-space: nowrap; cursor: pointer;
+    }
+    .pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* Card List */
+    .card-list { display: flex; flex-direction: column; gap: 14px; padding-bottom: 40px; }
+    .item-card {
+      background: #fff; border-radius: 14px; padding: 16px;
+      border-top: 4px solid var(--primary);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .badge-row { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .badge {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px;
+      background: #e0f2fe; color: #0369a1;
+    }
+    .badge.kat { background: #f1f5f9; color: #475569; }
+    .item-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+    .item-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+    .btn-launch {
+      width: 100%; padding: 12px; border: none; border-radius: 10px;
+      background: var(--primary); color: #fff; font-weight: 700; font-size: 13px;
+      cursor: pointer; letter-spacing: 0.5px;
+    }
+    .btn-launch:active { transform: scale(0.98); }
+
+    /* Loader */
+    .loader { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 14px; }
+
+    /* Fullscreen Iframe Viewer */
+    #appViewer {
+      display: none; position: fixed; inset: 0; z-index: 999;
+      background: #fff; flex-direction: column;
+    }
+    .viewer-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; background: var(--primary); color: #fff;
+    }
+    .btn-back {
+      background: rgba(255,255,255,0.2); border: none; color: #fff;
+      padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;
+    }
+    .viewer-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #viewerFrame { flex: 1; width: 100%; border: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="brand">⚡ TERMINAL I&C</div>
+    <button class="btn-refresh" onclick="fetchMenu()">↻ Sync Data</button>
+  </div>
+
+  <!-- Halaman Utama Launcher -->
+  <div class="container">
+    <div class="hero-card">
+      <h1>TERMINAL MAINTENANCE I&C</h1>
+      <div class="hero-divider"></div>
+      <p>Pilih kategori di bawah atau gunakan kolom pencarian untuk mengakses form kalibrasi & dokumen.</p>
+    </div>
+
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Cari Tag, Instrumen, atau Unit..." onkeyup="filterData()">
+
+    <div class="filter-pills" id="categoryPills">
+      <button class="pill active" onclick="setCategory('ALL', this)">Semua</button>
+    </div>
+
+    <div id="loader" class="loader">Memuat database instrumen...</div>
+    <div id="cardContainer" class="card-list"></div>
+  </div>
+
+  <!-- Fullscreen App Viewer (Agar tetap Fullscreen tanpa pindah ke Chrome) -->
+  <div id="appViewer">
+    <div class="viewer-header">
+      <button class="btn-back" onclick="closeApp()">← Kembali</button>
+      <div class="viewer-title" id="viewerTitle">Memuat Aplikasi...</div>
+    </div>
+    <iframe id="viewerFrame" src=""></iframe>
+  </div>
+
+  <script>
+    // =========================================================================
+    // PASTE URL WEB APP APPS SCRIPT ANDA DI SINI:
+    const API_URL = "https://script.google.com/macros/s/AKfycbwVJl5VdgItp_--7hiyr9J3c-jqYNDfhf-tdgJrx2Mnjum0aTqGuSc880pUCFwHlG9W/exec";
+    // =========================================================================
+
+    let allMenus = [];
+    let selectedCategory = "ALL";
+
+    function fetchMenu() {
+      const loader = document.getElementById("loader");
+      const container = document.getElementById("cardContainer");
+      loader.style.display = "block";
+      container.innerHTML = "";
+
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(res => {
+          loader.style.display = "none";
+          if (res.status === "success") {
+            allMenus = res.data;
+            buildCategoryPills(allMenus);
+            renderCards(allMenus);
+          } else {
+            loader.style.display = "block";
+            loader.innerText = "Gagal memuat data: " + res.message;
+          }
+        })
+        .catch(err => {
+          loader.style.display = "block";
+          loader.innerText = "Koneksi bermasalah. Pastikan internet aktif.";
+        });
+    }
+
+    function buildCategoryPills(data) {
+      const pillContainer = document.getElementById("categoryPills");
+      const categories = ["ALL", ...new Set(data.map(item => item.kategori).filter(Boolean))];
+      
+      pillContainer.innerHTML = categories.map(cat => `
+        <button class="pill ${cat === 'ALL' ? 'active' : ''}" onclick="setCategory('${cat}', this)">
+          ${cat === 'ALL' ? 'Semua' : cat}
+        </button>
+      `).join("");
+    }
+
+    function setCategory(cat, btnElement) {
+      selectedCategory = cat;
+      document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+      btnElement.classList.add("active");
+      filterData();
+    }
+
+    function filterData() {
+      const keyword = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = allMenus.filter(item => {
+        const matchCat = selectedCategory === "ALL" || item.kategori === selectedCategory;
+        const matchText = (item.judul + " " + item.unit + " " + item.deskripsi).toLowerCase().includes(keyword);
+        return matchCat && matchText;
+      });
+      renderCards(filtered);
+    }
+
+    function renderCards(data) {
+      const container = document.getElementById("cardContainer");
+      if (data.length === 0) {
+        container.innerHTML = `<div class="loader">Data tidak ditemukan.</div>`;
+        return;
+      }
+
+      container.innerHTML = data.map(item => `
+        <div class="item-card">
+          <div class="badge-row">
+            ${item.unit ? `<span class="badge">UNIT: ${item.unit}</span>` : ''}
+            ${item.kategori ? `<span class="badge kat">${item.kategori}</span>` : ''}
+          </div>
+          <div class="item-title">${item.judul}</div>
+          <div class="item-desc">${item.deskripsi}</div>
+          <button class="btn-launch" onclick="openApp('${item.url}', '${item.judul}')">
+            BUKA APLIKASI ↗
+          </button>
+        </div>
+      `).join("");
+    }
+
+    // Membuka Web App tujuan di dalam layar penuh tanpa keluar dari PWA
+    function openApp(url, title) {
+      if (!url) {
+        alert("URL aplikasi belum diatur di Google Sheets.");
+        return;
+      }
+      document.getElementById("viewerTitle").innerText = title;
+      document.getElementById("viewerFrame").src = url;
+      document.getElementById("appViewer").style.display = "flex";
+    }
+
+    function closeApp() {
+      document.getElementById("appViewer").style.display = "none";
+      document.getElementById("viewerFrame").src = ""; // Bersihkan memori iframe
+    }
+
+    window.onload = fetchMenu;
+  </script>
+</body>
+</html>

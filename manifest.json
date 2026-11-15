@@ -1,0 +1,16 @@
+{
+  "name": "Terminal Maintenance I&C",
+  "short_name": "Maintenance I&C",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f4f8",
+  "theme_color": "#0f4c81",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/900/900797.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
